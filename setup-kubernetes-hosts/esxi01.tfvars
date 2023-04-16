@@ -12,8 +12,10 @@ kube_master_name      = "kubemaster01"
 kube_master_username  = "avd"
 kube_master_memsize   = 4096
 kube_master_numvcpus  = 2
-kube_master_disk_size = 40
+kube_master_disk_size = 15
 kube_master_network_name = "Kube"
+
+rook_disk_size = 40
 
 # IP configuration for kube-master
 kube_master_ip_address       = "10.10.40.11"

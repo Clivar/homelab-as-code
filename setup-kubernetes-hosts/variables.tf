@@ -66,6 +66,11 @@ variable "kube_master_disk_size" {
   type        = number
 }
 
+variable "rook_disk_size" {
+  description = "Rook disk size (in GB)"
+  type        = number
+}
+
 variable "kube_master_network_name" {
   description = "The network name for kube-master"
   type        = string

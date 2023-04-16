@@ -15,6 +15,13 @@ provider "esxi" {
   esxi_hostssl       = var.esxi_hostssl
 }
 
+resource "esxi_virtual_disk" "kube_master_disk" {
+  virtual_disk_disk_store = var.kube_master_datastore
+  virtual_disk_dir        = "/${var.kube_master_name}"
+  virtual_disk_size       = var.rook_disk_size
+  virtual_disk_type       = "thin"
+}
+
 resource "esxi_guest" "kube_master" {
   guest_name   = var.kube_master_name
   disk_store   = var.datastore_name
@@ -27,6 +34,10 @@ resource "esxi_guest" "kube_master" {
   power = "on"
   guest_startup_timeout = 60
   ovf_properties_timer   = 20
+
+  virtual_disks {
+    virtual_disk_id = esxi_virtual_disk.kube_master_disk.id
+  }
 
   # Customize the cloud-init user-data
   guestinfo = {

@@ -16,7 +16,7 @@ provider "esxi" {
 }
 
 resource "esxi_virtual_disk" "kube_master_disk" {
-  virtual_disk_disk_store = var.kube_master_datastore
+  virtual_disk_disk_store = var.datastore_name
   virtual_disk_dir        = "/${var.kube_master_name}"
   virtual_disk_size       = var.rook_disk_size
   virtual_disk_type       = "thin"
@@ -37,6 +37,7 @@ resource "esxi_guest" "kube_master" {
 
   virtual_disks {
     virtual_disk_id = esxi_virtual_disk.kube_master_disk.id
+    slot            = "0:1"
   }
 
   # Customize the cloud-init user-data

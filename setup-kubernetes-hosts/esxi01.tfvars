@@ -10,9 +10,9 @@ ssh_authorized_key    = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDgLY5i6/xGA7Fcak0
 # Kube master settings
 kube_master_name      = "kubemaster01"
 kube_master_username  = "avd"
-kube_master_memsize   = 4096
-kube_master_numvcpus  = 2
-kube_master_disk_size = 15
+kube_master_memsize   = 8192
+kube_master_numvcpus  = 4
+kube_master_disk_size = 30
 kube_master_network_name = "Kube"
 
 rook_disk_size = 40
@@ -29,7 +29,7 @@ kube_worker_name      = "kubeworker01"
 kube_worker_username  = "avd"
 kube_worker_memsize   = 8192
 kube_worker_numvcpus  = 4
-kube_worker_disk_size = 10
+kube_worker_disk_size = 30
 kube_worker_network_name = "Kube"
 
 # IP configuration for kube-worker

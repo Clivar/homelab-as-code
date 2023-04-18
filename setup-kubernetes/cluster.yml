@@ -112,7 +112,7 @@
 
     - name: Install Rook Helm chart
       command: >
-        helm upgrade --install rook-ceph rook-release/rook-ceph  
+        helm upgrade --install rook-ceph rook-release/rook-ceph
         --namespace rook-ceph
         --create-namespace
 
@@ -134,7 +134,7 @@
 
     - name: Install Rook Helm chart
       command: >
-        helm upgrade --install rook-ceph rook-release/rook-ceph  
+        helm upgrade --install rook-ceph-cluster rook-release/rook-ceph-cluster
         --namespace rook-ceph
         --create-namespace
         -f /tmp/rook-values.yml

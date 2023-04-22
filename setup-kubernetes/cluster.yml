@@ -101,24 +101,7 @@
 
 - name: Install Rook package
   hosts: kube_control_plane[0]
-  tags: apps
-  become: yes
-  tasks:
-    - name: Add Rook Helm repository
-      command: helm repo add rook-release https://charts.rook.io/release
-
-    - name: Update Helm repositories
-      command: helm repo update
-
-    - name: Install Rook Helm chart
-      command: >
-        helm upgrade --install rook-ceph rook-release/rook-ceph
-        --namespace rook-ceph
-        --create-namespace
-
-- name: Install Rook Cluster package
-  hosts: kube_control_plane[0]
-  tags: apps
+  tags: rook
   become: yes
   tasks:
     - name: Add Rook Helm repository
@@ -129,8 +112,30 @@
 
     - name: Process the Rook Helm values template
       ansible.builtin.template:
-        src: "rook/values.yml"
-        dest: "/tmp/rook-values.yml"
+        src: "rook-operator/values.yml"
+        dest: "/tmp/rook-operator-values.yml"
+
+    - name: Install Rook Helm chart
+      command: >
+        helm upgrade --install rook-ceph rook-release/rook-ceph
+        --namespace rook-ceph
+        --create-namespace
+
+- name: Install Rook Cluster package
+  hosts: kube_control_plane[0]
+  tags: rook
+  become: yes
+  tasks:
+    - name: Add Rook Helm repository
+      command: helm repo add rook-release https://charts.rook.io/release
+
+    - name: Update Helm repositories
+      command: helm repo update
+
+    - name: Process the Rook Helm values template
+      ansible.builtin.template:
+        src: "rook-cluster/values.yml"
+        dest: "/tmp/rook-cluster-values.yml"
 
     - name: Install Rook Helm chart
       command: >

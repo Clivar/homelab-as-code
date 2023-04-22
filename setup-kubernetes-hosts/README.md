@@ -2,7 +2,13 @@
 Deploys a worker and master node on the specified ESXi host using Terraform and cloudinit.
 
 ## Getting started
-Download an ubuntu OVA image at `https://cloud-images.ubuntu.com/`
+Download an ubuntu OVA image at `https://cloud-images.ubuntu.com/`  
+Use workspaces for every single esxi host
+```
+terraform workspace new esxi01
+terraform workspace select esxi01
+terraform apply --var-file esxi01.tfvars
+```
 
 ## Debugging
 It can be handy to add a password for sign in through ESXi. 

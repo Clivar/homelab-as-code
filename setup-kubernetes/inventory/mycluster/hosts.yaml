@@ -4,20 +4,42 @@ all:
       ansible_host: 10.10.40.11
       ip: 10.10.40.11
       access_ip: 10.10.40.11
+    kubemaster02:
+      ansible_host: 10.10.40.12
+      ip: 10.10.40.12
+      access_ip: 10.10.40.12
+    kubemaster03:
+      ansible_host: 10.10.40.13
+      ip: 10.10.40.13
+      access_ip: 10.10.40.13
     kubeworker01:
       ansible_host: 10.10.40.21
       ip: 10.10.40.21
       access_ip: 10.10.40.21
+    kubeworker02:
+      ansible_host: 10.10.40.22
+      ip: 10.10.40.22
+      access_ip: 10.10.40.22
+    kubeworker03:
+      ansible_host: 10.10.40.23
+      ip: 10.10.40.23
+      access_ip: 10.10.40.23
   children:
     kube_control_plane:
       hosts:
         kubemaster01:
+        kubemaster02:
+        kubemaster03:
     kube_node:
       hosts:
         kubeworker01:
+        kubeworker02:
+        kubeworker03:
     etcd:
       hosts:
         kubemaster01:
+        kubemaster02:
+        kubemaster03:
     k8s_cluster:
       children:
         kube_control_plane:

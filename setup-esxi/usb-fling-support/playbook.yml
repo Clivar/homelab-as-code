@@ -1,0 +1,33 @@
+- name: Install USB Fling on ESXi Host
+  hosts: esxi
+  gather_facts: no
+  vars_files:
+    - esxi_vars.yml
+  tasks:
+    - name: Copy USB Fling VIB file to ESXi host
+      ansible.builtin.copy:
+        src: "{{ usb_fling_filename }}"
+        dest: "/tmp/{{ usb_fling_filename }}"
+
+    - name: Install USB Network Native Driver Fling on ESXi host
+      ansible.builtin.shell:
+        cmd: esxcli software vib install -v /tmp/{{ usb_fling_filename }}
+      register: usb_fling_install_result
+      failed_when: "'Error' in usb_fling_install_result.stdout"
+
+    - name: Remove the VIB file from the ESXi host
+      ansible.builtin.file:
+        path: /tmp/{{ usb_fling_filename }}
+        state: absent
+
+    - name: Reboot ESXi host to activate the USB Fling
+      ansible.builtin.shell:
+        cmd: reboot
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - name: Wait for the host to restart
+      ansible.builtin.wait_for_connection:
+        delay: 60
+        timeout: 300

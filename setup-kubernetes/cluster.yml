@@ -120,6 +120,7 @@
         helm upgrade --install rook-ceph rook-release/rook-ceph
         --namespace rook-ceph
         --create-namespace
+        -f /tmp/rook-operator-values.yml
 
 - name: Install Rook Cluster package
   hosts: kube_control_plane[0]
@@ -142,4 +143,4 @@
         helm upgrade --install rook-ceph-cluster rook-release/rook-ceph-cluster
         --namespace rook-ceph
         --create-namespace
-        -f /tmp/rook-values.yml
+        -f /tmp/rook-cluster-values.yml

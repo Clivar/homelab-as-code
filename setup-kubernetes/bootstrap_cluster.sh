@@ -64,4 +64,4 @@ if [ ! -d "$INVENTORY_DIR" ]; then
 fi
 
 # Bootstrap the Kubernetes cluster using Kubespray
-ansible-playbook -i ${INVENTORY_DIR}/hosts.yaml --user $VAR_USER --private-key $VAR_PRIVATE_KEY_PATH --become --become-user=root --ssh-common-args='-o StrictHostKeyChecking=no' cluster.yml
+ansible-playbook -i ${INVENTORY_DIR}/hosts.yaml --user $VAR_USER --private-key $VAR_PRIVATE_KEY_PATH --become --become-user=root cluster.yml

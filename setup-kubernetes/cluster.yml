@@ -133,3 +133,68 @@
         --namespace rook-ceph
         --create-namespace
         -f /tmp/rook-cluster-values.yml
+
+- name: Initialise access to cluster
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Fetch new kube config from kubemaster
+      ansible.builtin.command: sudo cat /etc/kubernetes/admin.conf
+      register: kubeconfig_raw
+      delegate_to: "{{ groups['kubemaster'][0] }}"
+
+    - name: Save kube config to local file
+      ansible.builtin.copy:
+        content: "{{ kubeconfig_raw.stdout }}"
+        dest: "{{ ansible_env.HOME }}/.kube/config"
+        mode: 0600
+
+    - name: Update IP address in kube config
+      ansible.builtin.lineinfile:
+        path: "{{ ansible_env.HOME }}/.kube/config"
+        regexp: '^    server:'
+        line: "    server: https://{{ hostvars[groups['kubemaster'][0]]['ansible_host'] }}:6443"
+
+- name: Install Velero on Kubernetes cluster using kubectl and Ansible Vault
+  hosts: localhost
+  tasks:
+    - name: Download Velero CLI
+      get_url:
+        url: https://github.com/vmware-tanzu/velero/releases/download/v1.11.0/velero-v1.11.0-linux-amd64.tar.gz
+        dest: /tmp/velero.tar.gz
+
+    - name: Extract Velero CLI
+      unarchive:
+        src: /tmp/velero.tar.gz
+        dest: /tmp
+
+    - name: Move Velero CLI to /usr/local/bin
+      command: mv /tmp/velero-v1.11.0-linux-amd64/velero /usr/local/bin
+
+    - name: Make Velero CLI executable
+      file:
+        path: /usr/local/bin/velero
+        mode: 0755
+
+    - name: Create Wasabi S3-compatible storage credentials file
+      copy:
+        content: |
+          [default]
+          aws_access_key_id = {{ wasabi_access_key }}
+          aws_secret_access_key = {{ wasabi_secret_key }}
+        dest: /tmp/wasabi-credentials
+      no_log: true
+
+    - name: Install Velero with Wasabi S3-compatible storage configuration
+      command: >
+        velero install \
+          --kubeconfig {{ ansible_env.HOME }}/.kube/config \
+          --provider aws \
+          --plugins velero/velero-plugin-for-aws:v1.7.0 \
+          --bucket {{ wasabi_bucket }} \
+          --backup-location-config region={{ wasabi_location }},s3ForcePathStyle="true",s3Url=https://s3.wasabisys.com \
+          --snapshot-location-config region={{ wasabi_location }} \
+          --secret-file /tmp/wasabi-credentials \
+          --use-restic \
+          --wait
+      no_log: true

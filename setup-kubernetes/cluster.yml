@@ -1,138 +1,138 @@
-# - name: Include Kubespray cluster.yml playbook
-#   import_playbook: kubespray/cluster.yml
+- name: Include Kubespray cluster.yml playbook
+  import_playbook: kubespray/cluster.yml
 
-# - name: Install Sealed Secrets with custom key pair
-#   hosts: kube_control_plane[0]
-#   tags: gitops
-#   vars:
-#     custom_key_pair_dir: sealed-secrets-keys
-#     custom_key_secret_name: sealed-secrets-custom-key
-#     sealed_secrets_namespace: kube-system
-#   tasks:
-#     - name: Add Bitnami Helm repository
-#       command: helm repo add bitnami https://charts.bitnami.com/bitnami
+- name: Install Sealed Secrets with custom key pair
+  hosts: kube_control_plane[0]
+  tags: gitops
+  vars:
+    custom_key_pair_dir: sealed-secrets-keys
+    custom_key_secret_name: sealed-secrets-custom-key
+    sealed_secrets_namespace: kube-system
+  tasks:
+    - name: Add Bitnami Helm repository
+      command: helm repo add bitnami https://charts.bitnami.com/bitnami
 
-#     - name: Update Helm repositories
-#       command: helm repo update
+    - name: Update Helm repositories
+      command: helm repo update
 
-#     - name: Check if custom key exists in Kubernetes
-#       ansible.builtin.command:
-#         cmd: kubectl get secret {{ custom_key_secret_name }} --no-headers -n {{ sealed_secrets_namespace }}
-#       register: secret_output
-#       ignore_errors: true
+    - name: Check if custom key exists in Kubernetes
+      ansible.builtin.command:
+        cmd: kubectl get secret {{ custom_key_secret_name }} --no-headers -n {{ sealed_secrets_namespace }}
+      register: secret_output
+      ignore_errors: true
 
-#     - name: Copy custom key pair to Kubernetes master
-#       ansible.builtin.copy:
-#         src: "{{ custom_key_pair_dir }}/{{ item }}"
-#         dest: "/tmp/{{ item }}"
-#       loop:
-#         - tls.crt
-#         - tls.key
-#       when: secret_output.rc != 0
+    - name: Copy custom key pair to Kubernetes master
+      ansible.builtin.copy:
+        src: "{{ custom_key_pair_dir }}/{{ item }}"
+        dest: "/tmp/{{ item }}"
+      loop:
+        - tls.crt
+        - tls.key
+      when: secret_output.rc != 0
 
-#     - name: Create Kubernetes secret with custom key pair
-#       command: >
-#         kubectl create secret tls {{ custom_key_secret_name }}
-#         --cert=/tmp/tls.crt
-#         --key=/tmp/tls.key
-#         -n {{ sealed_secrets_namespace }}
-#       when: secret_output.rc != 0
+    - name: Create Kubernetes secret with custom key pair
+      command: >
+        kubectl create secret tls {{ custom_key_secret_name }}
+        --cert=/tmp/tls.crt
+        --key=/tmp/tls.key
+        -n {{ sealed_secrets_namespace }}
+      when: secret_output.rc != 0
 
-#     - name: Cleanup custom key pair from Kubernetes master
-#       ansible.builtin.file:
-#         path: "/tmp/{{ item }}"
-#         state: absent
-#       loop:
-#         - tls.crt
-#         - tls.key
-#       when: secret_output.rc != 0
+    - name: Cleanup custom key pair from Kubernetes master
+      ansible.builtin.file:
+        path: "/tmp/{{ item }}"
+        state: absent
+      loop:
+        - tls.crt
+        - tls.key
+      when: secret_output.rc != 0
     
-#     - name: Set Kubernetes secret with custom key pair as active
-#       command: >
-#         kubectl -n {{ sealed_secrets_namespace }}
-#         label secret {{ custom_key_secret_name }}
-#         sealedsecrets.bitnami.com/sealed-secrets-key=active
+    - name: Set Kubernetes secret with custom key pair as active
+      command: >
+        kubectl -n {{ sealed_secrets_namespace }}
+        label secret {{ custom_key_secret_name }}
+        sealedsecrets.bitnami.com/sealed-secrets-key=active
         
-#     - name: Install Sealed Secrets Helm chart with custom key pair
-#       command: >
-#         helm upgrade --install sealed-secrets
-#         bitnami/sealed-secrets
-#         --namespace {{ sealed_secrets_namespace }}
-#         --set 'secretName={{ custom_key_secret_name }}'
+    - name: Install Sealed Secrets Helm chart with custom key pair
+      command: >
+        helm upgrade --install sealed-secrets
+        bitnami/sealed-secrets
+        --namespace {{ sealed_secrets_namespace }}
+        --set 'secretName={{ custom_key_secret_name }}'
 
-# - name: Install Gitlab Agent package
-#   hosts: kube_control_plane[0]
-#   tags: gitops
-#   become: yes
-#   tasks:
-#     - name: Add GitLab Helm repository
-#       command: helm repo add gitlab https://charts.gitlab.io
+- name: Install Gitlab Agent package
+  hosts: kube_control_plane[0]
+  tags: gitops
+  become: yes
+  tasks:
+    - name: Add GitLab Helm repository
+      command: helm repo add gitlab https://charts.gitlab.io
 
-#     - name: Update Helm repositories
-#       command: helm repo update
+    - name: Update Helm repositories
+      command: helm repo update
 
-#     - name: Install GitLab Agent Helm chart
-#       command: >
-#         helm upgrade --install default gitlab/gitlab-agent 
-#         --namespace gitlab-agent-default 
-#         --create-namespace 
-#         --set image.tag=v15.11.0 
-#         --set config.token={{ gitlab_agent_token }}
-#         --set config.kasAddress=wss://kas.gitlab.com
+    - name: Install GitLab Agent Helm chart
+      command: >
+        helm upgrade --install default gitlab/gitlab-agent 
+        --namespace gitlab-agent-default 
+        --create-namespace 
+        --set image.tag=v15.11.0 
+        --set config.token={{ gitlab_agent_token }}
+        --set config.kasAddress=wss://kas.gitlab.com
 
-# - name: Install Gitlab Runner package
-#   hosts: kube_control_plane[0]
-#   tags: gitops
-#   become: yes
-#   tasks:
-#     - name: Add GitLab Helm repository
-#       command: helm repo add gitlab https://charts.gitlab.io
+- name: Install Gitlab Runner package
+  hosts: kube_control_plane[0]
+  tags: gitops
+  become: yes
+  tasks:
+    - name: Add GitLab Helm repository
+      command: helm repo add gitlab https://charts.gitlab.io
 
-#     - name: Update Helm repositories
-#       command: helm repo update
+    - name: Update Helm repositories
+      command: helm repo update
 
-#     - name: Install GitLab Runner Helm chart
-#       command: >
-#         helm upgrade --install default gitlab/gitlab-runner  
-#         --namespace gitlab
-#         --create-namespace 
-#         --set runnerRegistrationToken={{ gitlab_runner_token }}
-#         --set gitlabUrl=https://gitlab.com/
+    - name: Install GitLab Runner Helm chart
+      command: >
+        helm upgrade --install default gitlab/gitlab-runner  
+        --namespace gitlab
+        --create-namespace 
+        --set runnerRegistrationToken={{ gitlab_runner_token }}
+        --set gitlabUrl=https://gitlab.com/
 
-# - name: Install Rook package
-#   hosts: kube_control_plane[0]
-#   tags: rook
-#   become: yes
-#   tasks:
-#     - name: Add Rook Helm repository
-#       command: helm repo add rook-release https://charts.rook.io/release
+- name: Install Rook package
+  hosts: kube_control_plane[0]
+  tags: rook
+  become: yes
+  tasks:
+    - name: Add Rook Helm repository
+      command: helm repo add rook-release https://charts.rook.io/release
 
-#     - name: Update Helm repositories
-#       command: helm repo update
+    - name: Update Helm repositories
+      command: helm repo update
 
-#     - name: Process the Rook Operator Helm values template
-#       ansible.builtin.template:
-#         src: "rook-operator/values.yml"
-#         dest: "/tmp/rook-operator-values.yml"
+    - name: Process the Rook Operator Helm values template
+      ansible.builtin.template:
+        src: "rook-operator/values.yml"
+        dest: "/tmp/rook-operator-values.yml"
 
-#     - name: Install Rook Operator Helm chart
-#       command: >
-#         helm upgrade --install rook-ceph rook-release/rook-ceph
-#         --namespace rook-ceph
-#         --create-namespace
-#         -f /tmp/rook-operator-values.yml
+    - name: Install Rook Operator Helm chart
+      command: >
+        helm upgrade --install rook-ceph rook-release/rook-ceph
+        --namespace rook-ceph
+        --create-namespace
+        -f /tmp/rook-operator-values.yml
 
-#     - name: Process the Rook Cluster Helm values template
-#       ansible.builtin.template:
-#         src: "rook-cluster/values.yml"
-#         dest: "/tmp/rook-cluster-values.yml"
+    - name: Process the Rook Cluster Helm values template
+      ansible.builtin.template:
+        src: "rook-cluster/values.yml"
+        dest: "/tmp/rook-cluster-values.yml"
 
-#     - name: Install Rook Cluster Helm chart
-#       command: >
-#         helm upgrade --install rook-ceph-cluster rook-release/rook-ceph-cluster
-#         --namespace rook-ceph
-#         --create-namespace
-#         -f /tmp/rook-cluster-values.yml
+    - name: Install Rook Cluster Helm chart
+      command: >
+        helm upgrade --install rook-ceph-cluster rook-release/rook-ceph-cluster
+        --namespace rook-ceph
+        --create-namespace
+        -f /tmp/rook-cluster-values.yml
 
 - name: Copy Kubernetes config from master to local machine
   hosts: kube_control_plane[0]

@@ -73,8 +73,8 @@
 
     - name: Install GitLab Agent Helm chart
       command: >
-        helm upgrade --install default gitlab/gitlab-agent 
-        --namespace gitlab-agent-default 
+        helm upgrade --install releases gitlab/gitlab-agent 
+        --namespace gitlab-agent-releases 
         --create-namespace 
         --set image.tag=v15.11.0 
         --set config.token={{ gitlab_agent_token }}

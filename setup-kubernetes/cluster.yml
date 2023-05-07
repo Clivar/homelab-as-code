@@ -224,7 +224,7 @@
           --provider aws \
           --plugins velero/velero-plugin-for-aws:v1.7.0 \
           --bucket {{ wasabi_bucket }} \
-          --backup-location-config region=us-east-1,s3ForcePathStyle="true",s3Url=https://s3.wasabisys.com \
+          --backup-location-config region=us-east-1,s3ForcePathStyle="true",s3Url=https://s3.eu-west-2.wasabisys.com \
           --snapshot-location-config region=us-east-1 \
           --secret-file /tmp/wasabi-credentials \
           --wait

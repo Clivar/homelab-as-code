@@ -1,6 +1,26 @@
 - name: Include Kubespray cluster.yml playbook
   import_playbook: kubespray/cluster.yml
 
+- name: Install kube-vip Cloud Provider and configure IP range
+  hosts: kube_control_plane[0]
+  tasks:
+    - name: Apply kube-vip Cloud Provider manifest
+      ansible.builtin.shell:
+        cmd: kubectl apply -f https://raw.githubusercontent.com/kube-vip/kube-vip-cloud-provider/main/manifest/kube-vip-cloud-controller.yaml
+      register: kube_vip_apply_result
+      changed_when: "'created' in kube_vip_apply_result.stdout"
+
+    - name: Check if kubevip ConfigMap exists
+      ansible.builtin.shell:
+        cmd: kubectl get configmap kubevip -n kube-system -o jsonpath='{.metadata.name}'
+      register: kube_vip_configmap_check
+      ignore_errors: yes
+
+    - name: Create global CIDR ConfigMap for kube-vip
+      ansible.builtin.shell:
+        cmd: kubectl create configmap -n kube-system kubevip --from-literal cidr-global=192.168.0.220/29
+      when: kube_vip_configmap_check.rc != 0
+
 - name: Install Sealed Secrets with custom key pair
   hosts: kube_control_plane[0]
   tags: gitops

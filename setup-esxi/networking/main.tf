@@ -25,25 +25,25 @@ resource "esxi_vswitch" "og_switch" {
     }
 }
 
-resource "esxi_vswitch" "wan" {
-    name    =   "vSwitchWAN"
-    promiscuous_mode = true
-    mac_changes = true
-    forged_transmits = true
-    uplink {
-        name = var.wan_uplink
-    }
-}
+# resource "esxi_vswitch" "wan" {
+#     name    =   "vSwitchWAN"
+#     promiscuous_mode = true
+#     mac_changes = true
+#     forged_transmits = true
+#     uplink {
+#         name = var.wan_uplink
+#     }
+# }
 
-resource "esxi_vswitch" "sync" {
-    name    =   "vSwitchSync"
-    promiscuous_mode = true
-    mac_changes = true
-    forged_transmits = true
-    uplink {
-        name = var.sync_uplink
-    }
-}
+# resource "esxi_vswitch" "sync" {
+#     name    =   "vSwitchSync"
+#     promiscuous_mode = true
+#     mac_changes = true
+#     forged_transmits = true
+#     uplink {
+#         name = var.sync_uplink
+#     }
+# }
 
 resource "esxi_portgroup" "iot" {
     name = "IOT"
@@ -75,14 +75,14 @@ resource "esxi_portgroup" "virtual" {
     vlan = 30
 }
 
-resource "esxi_portgroup" "sync" {
-    name = "Sync"
-    vswitch = esxi_vswitch.sync.name
-    vlan = 3
-}
+# resource "esxi_portgroup" "sync" {
+#     name = "Sync"
+#     vswitch = esxi_vswitch.sync.name
+#     vlan = 3
+# }
 
-resource "esxi_portgroup" "wan" {
-    name = "WAN"
-    vswitch = esxi_vswitch.wan.name
-    vlan = 0
-}
+# resource "esxi_portgroup" "wan" {
+#     name = "WAN"
+#     vswitch = esxi_vswitch.wan.name
+#     vlan = 0
+# }

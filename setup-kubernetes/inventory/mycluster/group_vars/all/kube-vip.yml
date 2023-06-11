@@ -10,6 +10,7 @@ loadbalancer_apiserver:
 
 # LoadBalancer for services
 kube_vip_services_enabled: true
+kube_vip_leader_election_enabled: true
 # kube_vip_services_interface: ens320
 
 kube_vip_arp_enabled: true

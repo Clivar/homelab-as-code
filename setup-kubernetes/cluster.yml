@@ -137,10 +137,15 @@
 
     - name: Install Rook Operator Helm chart
       command: >
-        helm upgrade --install rook-ceph rook-release/rook-ceph
-        --namespace rook-ceph
-        --create-namespace
-        -f /tmp/rook-operator-values.yml
+        helm upgrade --install rook-ceph rook-release/rook-ceph --namespace rook-ceph --create-namespace -f /tmp/rook-operator-values.yml
+    
+    - name: Wait for the Rook Operator to be ready
+      command: >
+        kubectl -n rook-ceph rollout status deploy/rook-ceph-operator
+      register: result
+      until: result.rc == 0
+      retries: 60
+      delay: 5
 
     - name: Process the Rook Cluster Helm values template
       ansible.builtin.template:
@@ -149,10 +154,7 @@
 
     - name: Install Rook Cluster Helm chart
       command: >
-        helm upgrade --install rook-ceph-cluster rook-release/rook-ceph-cluster
-        --namespace rook-ceph
-        --create-namespace
-        -f /tmp/rook-cluster-values.yml
+        helm upgrade --install rook-ceph-cluster rook-release/rook-ceph-cluster --namespace rook-ceph --create-namespace -f /tmp/rook-cluster-values.yml
 
 - name: Copy Kubernetes config from master to local machine
   hosts: kube_control_plane[0]
@@ -176,7 +178,7 @@
   tasks:
     - name: Get the IP address of the first Kubernetes master
       set_fact:
-        k8s_master_ip: "{{ hostvars[groups['kube_control_plane'][0]]['ansible_host'] }}"
+        k8s_master_ip: "{{ kube_vip_address }}"
 
     - name: Update server attribute in Kubernetes config
       ansible.builtin.shell:

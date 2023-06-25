@@ -38,7 +38,6 @@ write_files:
   - path: /etc/apt/apt.conf.d/50unattended-upgrades
     content: |
       Unattended-Upgrade::Allowed-Origins {
-          "$${distro_id}:$${distro_codename}";
           "$${distro_id}:$${distro_codename}-security";
       };
       Unattended-Upgrade::Package-Blacklist {
@@ -61,7 +60,8 @@ write_files:
   - path: /etc/systemd/journald.conf
     content: |
       [Journal]
-      SystemMaxUse=500M
+      SystemMaxUse=4G
+      SystemKeepFree=5G
       MaxFileSec=7day
       MaxRetentionSec=7day
   - path: /etc/logrotate.d/kubernetes

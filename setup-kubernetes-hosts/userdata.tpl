@@ -38,6 +38,7 @@ write_files:
   - path: /etc/apt/apt.conf.d/50unattended-upgrades
     content: |
       Unattended-Upgrade::Allowed-Origins {
+          "$${distro_id}:$${distro_codename}";
           "$${distro_id}:$${distro_codename}-security";
       };
       Unattended-Upgrade::Package-Blacklist {

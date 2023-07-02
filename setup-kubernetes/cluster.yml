@@ -250,3 +250,16 @@
           --snapshot-location-config region=us-east-1 \
           --secret-file /tmp/wasabi-credentials \
           --wait
+  
+- name: Expose Nginx Ingress
+  hosts: kube_control_plane[0]
+  tags: nginx
+  become: yes
+  tasks:
+    - name: Copy yaml to Kubernetes master
+      ansible.builtin.copy:
+        src: "ingress-nginx/service.yml"
+        dest: "/tmp/ingress-nginx-service.yml"
+    - name: Set Kubernetes secret with custom key pair as active
+      command: kubectl apply -f /tmp/ingress-nginx-service.yml -n {{ ingress_nginx_namespace }}
+    

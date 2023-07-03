@@ -18,7 +18,7 @@
 
     - name: Create global CIDR ConfigMap for kube-vip
       ansible.builtin.shell:
-        cmd: kubectl create configmap -n kube-system kubevip --from-literal cidr-global=192.168.0.220/29
+        cmd: kubectl create configmap -n kube-system kubevip --from-literal cidr-global=172.16.16.1/24
       when: kube_vip_configmap_check.rc != 0
 
 - name: Install Sealed Secrets with custom key pair
@@ -263,3 +263,32 @@
     - name: Set Kubernetes secret with custom key pair as active
       command: kubectl apply -f /tmp/ingress-nginx-service.yml -n {{ ingress_nginx_namespace }}
     
+- name: Install kubeseal
+  hosts: localhost
+  gather_facts: no
+  become:
+  tasks:
+    - name: Download kubeseal tar.gz
+      get_url:
+        url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.22.0/kubeseal-0.22.0-linux-amd64.tar.gz"
+        dest: "/tmp/kubeseal.tar.gz"
+        mode: '0644'
+
+    - name: Extract kubeseal tar.gz
+      unarchive:
+        src: /tmp/kubeseal.tar.gz
+        dest: /tmp
+
+    - name: Create ~/.local/bin directory if it does not exist
+      file:
+        path: ~/.local/bin
+        state: directory
+        mode: '0700'
+
+    - name: Move kubeseal to ~/.local/bin
+      command: mv /tmp/kubeseal ~/.local/bin
+
+    - name: Make kubeseal executable
+      file:
+        path: ~/.local/bin/kubeseal
+        mode: '0755'

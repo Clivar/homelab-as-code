@@ -11,7 +11,7 @@ terraform apply --var-file esxi01.tfvars
 ```
 
 ## Debugging
-It can be handy to add a password for sign in through ESXi. 
+It can be handy to add a password to enter the VM in the ESXi console. 
 Generate a password with `mkpasswd` in a linux/wsl. Add the following to your primary user in the `users` section in `userdata.tpl`. 
 ```yaml
 lock_passwd: false

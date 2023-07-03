@@ -13,3 +13,6 @@ The key is to keep the requirements and initial setup as easy as possible.
 ## Getting started
 Make sure to clone the repository properly:  
 `git clone --recurse-submodules`
+
+## Tips and tricks
+Too lazy to always input your ESXi password every run? Add `export TF_VAR_esxi_password="mypassword"` to your `~/.bashrc` file

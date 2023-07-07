@@ -262,6 +262,19 @@
         dest: "/tmp/ingress-nginx-service.yml"
     - name: Set Kubernetes secret with custom key pair as active
       command: kubectl apply -f /tmp/ingress-nginx-service.yml -n {{ ingress_nginx_namespace }}
+    - name: Copy custom key pair to Kubernetes master
+      ansible.builtin.copy:
+        src: "ingress-nginx/{{ item }}"
+        dest: "/tmp/nginx-wildcard-{{ item }}"
+      loop:
+        - tls.crt
+        - tls.key
+    - name: Create Kubernetes secret with custom key pair
+      command: >
+        kubectl create secret tls wildcard-tls
+        --cert=/tmp/nginx-wildcard-tls.crt
+        --key=/tmp/nginx-wildcard-tls.key
+        -n {{ ingress_nginx_namespace }}
     
 - name: Install kubeseal
   hosts: localhost

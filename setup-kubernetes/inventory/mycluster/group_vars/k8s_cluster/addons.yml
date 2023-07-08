@@ -118,6 +118,7 @@ ingress_nginx_configmap:
   map-hash-bucket-size: "128"
   ssl-protocols: "TLSv1.2 TLSv1.3"
   server-tokens: "false"
+  proxy-body-size: "50m"
 
 # ingress_nginx_configmap_tcp_services:
 #   9000: "default/example-go:8080"

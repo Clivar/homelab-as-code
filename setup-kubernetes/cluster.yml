@@ -188,34 +188,44 @@
   hosts: localhost
   become: no
   tasks:
+    - name: Check if Velero is installed
+      shell: velero version
+      register: velero_check
+      ignore_errors: true
     - name: Download Velero CLI
       get_url:
         url: https://github.com/vmware-tanzu/velero/releases/download/v1.11.0/velero-v1.11.0-linux-amd64.tar.gz
         dest: /tmp/velero.tar.gz
+      when: velero_check.rc != 0
 
     - name: Extract Velero CLI
       unarchive:
         src: /tmp/velero.tar.gz
         dest: /tmp
+      when: velero_check.rc != 0
 
     - name: Create ~/.local/bin directory if it does not exist
       file:
         path: "{{ ansible_env.HOME }}/.local/bin"
         state: directory
         mode: '0700'
+      when: velero_check.rc != 0
 
     - name: Move Velero CLI to ~/.local/bin
       command: mv /tmp/velero-v1.11.0-linux-amd64/velero "{{ ansible_env.HOME }}/.local/bin"
+      when: velero_check.rc != 0
 
     - name: Make Velero CLI executable
       file:
         path: "{{ ansible_env.HOME }}/.local/bin/velero"
         mode: '0755'
+      when: velero_check.rc != 0
 
     - name: Check if ~/.local/bin is in PATH
       shell: echo $PATH | grep -q "{{ ansible_env.HOME }}/.local/bin"
       register: path_check
       changed_when: false
+      when: velero_check.rc != 0
 
     - name: Add ~/.local/bin to PATH if not present
       lineinfile:
@@ -223,12 +233,14 @@
         line: 'export PATH=$PATH:$HOME/.local/bin'
         state: present
         insertafter: EOF
-      when: not path_check.rc
+      when: not path_check.rc and velero_check.rc != 0
 
     - name: Source .bashrc to update PATH
       shell: source "{{ ansible_env.HOME }}/.bashrc"
       args:
         executable: /bin/bash
+      when: not path_check.rc and velero_check.rc != 0
+
 
     - name: Create Wasabi S3-compatible storage credentials file
       copy:
@@ -249,8 +261,29 @@
           --backup-location-config region=us-east-1,s3ForcePathStyle="true",s3Url=https://s3.eu-west-2.wasabisys.com \
           --snapshot-location-config region=us-east-1 \
           --secret-file /tmp/wasabi-credentials \
+          --features=EnableCSI \
           --wait
-  
+
+    - name: Check if daily backup schedule exists
+      command: velero schedule get daily-backup
+      register: daily_backup_schedule
+      ignore_errors: true
+
+    - name: Schedule daily Velero backups
+      command: |
+        velero schedule create daily-backup --schedule="0 7 * * *" --ttl 168h0m0s --include-resources persistentvolumes,persistentvolumeclaims
+      when: daily_backup_schedule.rc != 0
+
+    - name: Check if weekly backup schedule exists
+      command: velero schedule get weekly-backup
+      register: weekly_backup_schedule
+      ignore_errors: true
+
+    - name: Schedule weekly Velero backups
+      command: |
+        velero schedule create weekly-backup --schedule="0 7 * * 0" --ttl 504h0m0s --include-resources persistentvolumes,persistentvolumeclaims
+      when: weekly_backup_schedule.rc != 0
+      
 - name: Expose Nginx Ingress
   hosts: kube_control_plane[0]
   tags: nginx
@@ -262,6 +295,11 @@
         dest: "/tmp/ingress-nginx-service.yml"
     - name: Set Kubernetes secret with custom key pair as active
       command: kubectl apply -f /tmp/ingress-nginx-service.yml -n {{ ingress_nginx_namespace }}
+    - name: Check if Kubernetes secret exists
+      command: 
+        cmd: kubectl get secret wildcard-tls -n {{ ingress_nginx_namespace }}
+      register: secret_exists
+      ignore_errors: true
     - name: Copy custom key pair to Kubernetes master
       ansible.builtin.copy:
         src: "ingress-nginx/{{ item }}"
@@ -269,39 +307,51 @@
       loop:
         - tls.crt
         - tls.key
+      when: secret_exists.rc != 0
     - name: Create Kubernetes secret with custom key pair
       command: >
         kubectl create secret tls wildcard-tls
         --cert=/tmp/nginx-wildcard-tls.crt
         --key=/tmp/nginx-wildcard-tls.key
         -n {{ ingress_nginx_namespace }}
+      when: secret_exists.rc != 0
     
 - name: Install kubeseal
   hosts: localhost
   gather_facts: no
   become:
   tasks:
+    - name: Check if kubeseal is installed
+      command: kubeseal --version
+      register: kubeseal_check
+      ignore_errors: true
+
     - name: Download kubeseal tar.gz
       get_url:
         url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.22.0/kubeseal-0.22.0-linux-amd64.tar.gz"
         dest: "/tmp/kubeseal.tar.gz"
         mode: '0644'
+      when: kubeseal_check.rc != 0
 
     - name: Extract kubeseal tar.gz
       unarchive:
         src: /tmp/kubeseal.tar.gz
         dest: /tmp
+      when: kubeseal_check.rc != 0
 
     - name: Create ~/.local/bin directory if it does not exist
       file:
         path: ~/.local/bin
         state: directory
         mode: '0700'
+      when: kubeseal_check.rc != 0
 
     - name: Move kubeseal to ~/.local/bin
       command: mv /tmp/kubeseal ~/.local/bin
+      when: kubeseal_check.rc != 0
 
     - name: Make kubeseal executable
       file:
         path: ~/.local/bin/kubeseal
         mode: '0755'
+      when: kubeseal_check.rc != 0

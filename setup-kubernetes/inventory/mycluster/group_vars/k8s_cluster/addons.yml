@@ -119,6 +119,8 @@ ingress_nginx_configmap:
   ssl-protocols: "TLSv1.2 TLSv1.3"
   server-tokens: "false"
   proxy-body-size: "50m"
+  proxy-read-timeout: "300s"
+  proxy-send-timeout: "60s"
 
 # ingress_nginx_configmap_tcp_services:
 #   9000: "default/example-go:8080"

@@ -96,9 +96,9 @@
         helm upgrade --install releases gitlab/gitlab-agent 
         --namespace gitlab-agent-releases 
         --create-namespace 
-        --set image.tag=v15.11.0 
         --set config.token={{ gitlab_agent_token }}
         --set config.kasAddress=wss://kas.gitlab.com
+        --version 1.16.0
 
 - name: Install Gitlab Runner package
   hosts: kube_control_plane[0]
@@ -118,6 +118,7 @@
         --create-namespace 
         --set runnerRegistrationToken={{ gitlab_runner_token }}
         --set gitlabUrl=https://gitlab.com/
+        --version 0.1.13
 
 - name: Install Rook package
   hosts: kube_control_plane[0]
@@ -155,7 +156,7 @@
 
     - name: Install Rook Operator Helm chart
       command: >
-        helm upgrade --install rook-ceph rook-release/rook-ceph --namespace rook-ceph --create-namespace -f /tmp/rook-operator-values.yml
+        helm upgrade --install rook-ceph rook-release/rook-ceph --namespace rook-ceph --create-namespace -f /tmp/rook-operator-values.yml --version v1.11.4
     
     - name: Wait for the Rook Operator to be ready
       command: >
@@ -172,7 +173,7 @@
 
     - name: Install Rook Cluster Helm chart
       command: >
-        helm upgrade --install rook-ceph-cluster rook-release/rook-ceph-cluster --namespace rook-ceph --create-namespace -f /tmp/rook-cluster-values.yml
+        helm upgrade --install rook-ceph-cluster rook-release/rook-ceph-cluster --namespace rook-ceph --create-namespace -f /tmp/rook-cluster-values.yml --version v1.11.4
 
 - name: Copy Kubernetes config from master to local machine
   hosts: kube_control_plane[0]

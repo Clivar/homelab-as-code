@@ -273,7 +273,7 @@
         velero install \
           --kubeconfig {{ ansible_env.HOME }}/.kube/config \
           --provider aws \
-          --plugins velero/velero-plugin-for-aws:v1.7.0 \
+          --plugins velero/velero-plugin-for-aws:v1.7.0,velero/velero-plugin-for-csi:v0.5.0 \
           --bucket {{ wasabi_bucket }} \
           --backup-location-config region=us-east-1,s3ForcePathStyle="true",s3Url=https://s3.eu-west-2.wasabisys.com \
           --snapshot-location-config region=us-east-1 \

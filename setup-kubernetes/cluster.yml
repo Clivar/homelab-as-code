@@ -130,6 +130,24 @@
     - name: Update Helm repositories
       command: helm repo update
 
+    - name: Copy the Snapshot CRDs files over
+      ansible.builtin.copy:
+        src: csi-external-snapshotter/client/config/crd/
+        dest: /tmp/csi-crd
+      
+    - name: Install Snapshot CRDs
+      shell: kubectl kustomize /tmp/csi-crd | kubectl create -f -
+      ignore_errors: true
+
+    - name: Copy the Common Snapshot Controller files over
+      ansible.builtin.copy:
+        src: csi-external-snapshotter/deploy/kubernetes/snapshot-controller/
+        dest: /tmp/csi-controller
+
+    - name: Install Common Snapshot Controller
+      shell: kubectl -n kube-system kustomize /tmp/csi-controller | kubectl create -f -
+      ignore_errors: true
+
     - name: Process the Rook Operator Helm values template
       ansible.builtin.template:
         src: "rook-operator/values.yml"
@@ -225,7 +243,6 @@
       shell: echo $PATH | grep -q "{{ ansible_env.HOME }}/.local/bin"
       register: path_check
       changed_when: false
-      when: velero_check.rc != 0
 
     - name: Add ~/.local/bin to PATH if not present
       lineinfile:

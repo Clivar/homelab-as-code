@@ -2,3 +2,7 @@
 	path = setup-kubernetes/kubespray
 	url = https://github.com/kubernetes-sigs/kubespray
 	branch = release-2.22
+[submodule "setup-kubernetes/csi-external-snapshotter"]
+	path = setup-kubernetes/csi-external-snapshotter
+	url = https://github.com/kubernetes-csi/external-snapshotter
+	branch = release-6.2

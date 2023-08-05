@@ -27,7 +27,7 @@ kube_master_ntp_server       = "10.10.40.1"
 # Kube worker settings
 kube_worker_name      = "kubeworker01"
 kube_worker_username  = "avd"
-kube_worker_memsize   = 8192
+kube_worker_memsize   = 12288
 kube_worker_numvcpus  = 4
 kube_worker_disk_size = 30
 kube_worker_network_name = "Kube"

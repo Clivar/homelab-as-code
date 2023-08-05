@@ -82,13 +82,13 @@ csi:
   # -- Enable host networking for CSI CephFS and RBD nodeplugins. This may be necessary
   # in some network configurations where the SDN does not provide access to an external cluster or
   # there is significant drop in read/write performance
-  enableCSIHostNetwork: true
+  enableCSIHostNetwork: false
   # -- Enable Snapshotter in CephFS provisioner pod
-  enableCephfsSnapshotter: true
+  enableCephfsSnapshotter: false
   # -- Enable Snapshotter in NFS provisioner pod
-  enableNFSSnapshotter: true
+  enableNFSSnapshotter: false
   # -- Enable Snapshotter in RBD provisioner pod
-  enableRBDSnapshotter: true
+  enableRBDSnapshotter: false
   # -- Enable Host mount for `/etc/selinux` directory for Ceph CSI nodeplugins
   enablePluginSelinuxHostMount: false
   # -- Enable Ceph CSI PVC encryption support
@@ -426,7 +426,7 @@ csi:
       effect: NoSchedule
 
   # -- The node labels for affinity of the CSI provisioner deployment [^1]
-  provisionerNodeAffinity: #key1=value1,value2; key2=value3
+  provisionerNodeAffinity: node-role.kubernetes.io/control-plane=
   # Set pluginTolerations and pluginNodeAffinity for plugin daemonset pods.
   # The CSI plugins need to be started on all the nodes where the clients need to mount the storage.
 
@@ -605,7 +605,7 @@ discover:
       operator: Exists
       effect: NoSchedule
   # -- The node labels for affinity of `discover-agent` [^1]
-  nodeAffinity: # key1=value1,value2; key2=value3
+  nodeAffinity: node-role.kubernetes.io/control-plane=
   # -- Labels to add to the discover pods
   podLabels: # "key1=value1,key2=value2"
   # -- Add resources to discover daemon pods

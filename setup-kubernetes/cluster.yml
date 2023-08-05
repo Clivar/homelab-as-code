@@ -131,24 +131,6 @@
     - name: Update Helm repositories
       command: helm repo update
 
-    - name: Copy the Snapshot CRDs files over
-      ansible.builtin.copy:
-        src: csi-external-snapshotter/client/config/crd/
-        dest: /tmp/csi-crd
-      
-    - name: Install Snapshot CRDs
-      shell: kubectl kustomize /tmp/csi-crd | kubectl create -f -
-      ignore_errors: true
-
-    - name: Copy the Common Snapshot Controller files over
-      ansible.builtin.copy:
-        src: csi-external-snapshotter/deploy/kubernetes/snapshot-controller/
-        dest: /tmp/csi-controller
-
-    - name: Install Common Snapshot Controller
-      shell: kubectl -n kube-system kustomize /tmp/csi-controller | kubectl create -f -
-      ignore_errors: true
-
     - name: Process the Rook Operator Helm values template
       ansible.builtin.template:
         src: "rook-operator/values.yml"
@@ -274,12 +256,12 @@
         velero install \
           --kubeconfig {{ ansible_env.HOME }}/.kube/config \
           --provider aws \
-          --plugins velero/velero-plugin-for-aws:v1.7.0,velero/velero-plugin-for-csi:v0.5.0 \
+          --plugins velero/velero-plugin-for-aws:v1.7.0 \
           --bucket {{ wasabi_bucket }} \
           --backup-location-config region=us-east-1,s3ForcePathStyle="true",s3Url=https://s3.eu-west-2.wasabisys.com \
-          --snapshot-location-config region=us-east-1 \
           --secret-file /tmp/wasabi-credentials \
-          --features=EnableCSI \
+          --use-volume-snapshots=false \
+          --use-node-agent \
           --wait
 
     - name: Check if daily backup schedule exists
@@ -289,7 +271,7 @@
 
     - name: Schedule daily Velero backups
       command: |
-        velero schedule create daily-backup --schedule="0 7 * * *" --ttl 168h0m0s --include-resources persistentvolumes,persistentvolumeclaims
+        velero schedule create daily-backup --schedule="0 7 * * *" --ttl 168h0m0s --include-namespaces gitlab
       when: daily_backup_schedule.rc != 0
 
     - name: Check if weekly backup schedule exists
@@ -299,7 +281,7 @@
 
     - name: Schedule weekly Velero backups
       command: |
-        velero schedule create weekly-backup --schedule="0 7 * * 0" --ttl 504h0m0s --include-resources persistentvolumes,persistentvolumeclaims
+        velero schedule create weekly-backup --schedule="0 7 * * 0" --ttl 504h0m0s --include-namespaces gitlab
       when: weekly_backup_schedule.rc != 0
       
 - name: Expose Nginx Ingress

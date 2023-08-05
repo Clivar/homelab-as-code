@@ -118,7 +118,7 @@
         --create-namespace 
         --set runnerRegistrationToken={{ gitlab_runner_token }}
         --set gitlabUrl=https://gitlab.com/
-        --version 0.1.13
+        --version 0.51.1
 
 - name: Install Rook package
   hosts: kube_control_plane[0]

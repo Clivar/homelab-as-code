@@ -271,7 +271,7 @@
 
     - name: Schedule daily Velero backups
       command: |
-        velero schedule create daily-backup --schedule="0 7 * * *" --ttl 168h0m0s --include-namespaces gitlab
+        velero schedule create daily-backup --schedule="0 7 * * *" --ttl 168h0m0s --include-namespaces gitlab --default-volumes-to-fs-backup
       when: daily_backup_schedule.rc != 0
 
     - name: Check if weekly backup schedule exists
@@ -281,7 +281,7 @@
 
     - name: Schedule weekly Velero backups
       command: |
-        velero schedule create weekly-backup --schedule="0 7 * * 0" --ttl 504h0m0s --include-namespaces gitlab
+        velero schedule create weekly-backup --schedule="0 7 * * 0" --ttl 504h0m0s --include-namespaces gitlab --default-volumes-to-fs-backup
       when: weekly_backup_schedule.rc != 0
       
 - name: Expose Nginx Ingress
@@ -355,3 +355,15 @@
         path: ~/.local/bin/kubeseal
         mode: '0755'
       when: kubeseal_check.rc != 0
+
+- name: Install cert-manager issuers
+  hosts: kube_control_plane[0]
+  tags: nginx
+  become: yes
+  tasks:
+    - name: Copy yaml to Kubernetes master
+      ansible.builtin.copy:
+        src: "cert-manager/cluster-issuers.yml"
+        dest: "/tmp/cert-manager-cluster-issuers.yml"
+    - name: Apply the yml
+      command: kubectl apply -f /tmp/cert-manager-cluster-issuers.yml

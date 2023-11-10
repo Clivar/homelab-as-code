@@ -1,0 +1,62 @@
+- name: Install USB fling VIB on ESXi using SSH and handle maintenance mode
+  hosts: esxi
+  gather_facts: no
+  vars_prompt:
+    - name: "ansible_ssh_pass"
+      prompt: "SSH password for ESXi"
+      private: yes
+  tasks:
+    - name: Enter maintenance mode
+      command:
+        cmd: "esxcli system maintenanceMode set --enable=true"
+      become: yes
+      ignore_errors: yes  # This is to prevent the playbook from failing if there are VMs running. You should shut down or migrate VMs before running this.
+
+    - name: Copy the VIB to ESXi host
+      copy:
+        src: "ESXi80U1-VMKUSB-NIC-FLING-64098092-component-21669994.zip"
+        dest: "/tmp/usb_fling.zip"
+        
+    - name: Install USB fling VIB on ESXi
+      command:
+        cmd: "esxcli software vib install -d /tmp/usb_fling.zip"
+      register: vib_install_result
+      become: yes
+
+    - name: Remove the VIB file from ESXi host
+      file:
+        path: "/tmp/usb_fling.zip"
+        state: absent
+
+    - name: Persist VMkernel to USB NIC mappings
+      command:
+        cmd: "esxcli system module parameters set -p 'vusb0_mac={{ vusb0_mac }} vusb1_mac={{ vusb1_mac }}' -m vmkusb_nic_fling"
+      become: yes
+
+    - name: Insert/update custom USB NIC bindings script in /etc/rc.local.d/local.sh
+      blockinfile:
+        path: "/etc/rc.local.d/local.sh"
+        block: |
+          # Custom script for USB NIC bindings
+          vusb0_status=$(esxcli network nic get -n vusb0 | grep 'Link Status' | awk '{print $NF}')
+          count=0
+          while [[ $count -lt 20 && "${vusb0_status}" != "Up" ]]
+          do
+              sleep 10
+              count=$(( $count + 1 ))
+              vusb0_status=$(esxcli network nic get -n vusb0 | grep 'Link Status' | awk '{print $NF}')
+          done
+
+          esxcfg-vswitch -R
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+        insertbefore: "^exit 0"
+        backup: yes
+      become: yes
+
+    - name: Check if reboot is required and reboot
+      command:
+        cmd: "reboot"
+      when: "'Reboot Required: true' in vib_install_result.stdout"
+      async: 60  # This gives the command some time to initiate the reboot.
+      poll: 0  # This makes Ansible proceed without waiting for the reboot to complete.
+      ignore_errors: true  # This is because the command will likely not return a result due to the reboot.

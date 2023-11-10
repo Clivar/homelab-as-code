@@ -1,0 +1,44 @@
+- name: Update SSL Certificate on ESXi
+  hosts: esxi
+  gather_facts: no
+
+  vars_prompt:
+    - name: "ansible_ssh_pass"
+      prompt: "SSH password for ESXi"
+      private: yes
+
+  tasks:
+    - name: Transfer the SSL certificate to the ESXi host
+      copy:
+        src: "{{ inventory_hostname }}.crt"
+        dest: "/tmp/tls.crt"
+
+    - name: Transfer the SSL key to the ESXi host
+      copy:
+        src: "{{ inventory_hostname }}.key"
+        dest: "/tmp/tls.key"
+
+    - name: Backup existing SSL certificate on ESXi
+      command:
+        cmd: "cp /etc/vmware/ssl/rui.crt /etc/vmware/ssl/rui.crt.backup"
+      become: yes
+
+    - name: Backup existing SSL key on ESXi
+      command:
+        cmd: "cp /etc/vmware/ssl/rui.key /etc/vmware/ssl/rui.key.backup"
+      become: yes
+
+    - name: Update SSL certificate on ESXi
+      command:
+        cmd: "cp /tmp/tls.crt /etc/vmware/ssl/rui.crt"
+      become: yes
+
+    - name: Update SSL key on ESXi
+      command:
+        cmd: "cp /tmp/tls.key /etc/vmware/ssl/rui.key"
+      become: yes
+
+    - name: Restart services on ESXi for the certificate change to take effect
+      command:
+        cmd: "services.sh restart"
+      become: yes
